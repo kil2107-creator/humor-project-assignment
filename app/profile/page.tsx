@@ -2,28 +2,50 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ProfileForm from "./profile-form";
 
+type Profile = {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    avatar_data: string | null;
+};
+
 export default async function ProfilePage() {
     const supabase = await createClient();
 
     const {
-        data: { claims },
+        data: claimsData,
+        error: claimsError,
     } = await supabase.auth.getClaims();
 
-    if (!claims) {
+    if (claimsError || !claimsData?.claims) {
         redirect("/login");
     }
 
-    const { data: profile, error } = await supabase
+    const claims = claimsData.claims;
+
+    const {
+        data: profileData,
+        error: profileError,
+    } = await supabase
         .rpc("get_my_profile")
         .maybeSingle();
 
-    if (error) {
+    if (profileError) {
         return (
-            <main style={{ padding: "40px" }}>
-                <p>Error loading profile: {error.message}</p>
+            <main
+                style={{
+                    padding: "40px",
+                    fontFamily: "Arial",
+                }}
+            >
+                <p>
+                    Error loading profile: {profileError.message}
+                </p>
             </main>
         );
     }
+
+    const profile = profileData as Profile | null;
 
     return (
         <ProfileForm
