@@ -109,6 +109,8 @@ export default function ProfileForm({
                 margin: "50px auto",
                 padding: "40px",
                 fontFamily: "Arial",
+                color: "#111",
+                backgroundColor: "white",
             }}
         >
             <h1>Profile</h1>
@@ -164,6 +166,7 @@ export default function ProfileForm({
                             border: "1px solid #999",
                             borderRadius: "6px",
                             backgroundColor: "white",
+                            color: "#111",
                             fontSize: "16px",
                             boxSizing: "border-box",
                         }}
@@ -185,6 +188,7 @@ export default function ProfileForm({
                             border: "1px solid #999",
                             borderRadius: "6px",
                             backgroundColor: "white",
+                            color: "#111",
                             fontSize: "16px",
                             boxSizing: "border-box",
                         }}
@@ -202,6 +206,7 @@ export default function ProfileForm({
                             display: "inline-block",
                             padding: "10px 18px",
                             backgroundColor: "#f3f3f3",
+                            color: "#111",
                             border: "1px solid #999",
                             borderRadius: "6px",
                             cursor: "pointer",
@@ -226,7 +231,7 @@ export default function ProfileForm({
                             style={{
                                 marginLeft: "12px",
                                 fontSize: "14px",
-                                color: "#555",
+                                color: "#444",
                             }}
                         >
               {selectedFileName}
