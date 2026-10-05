@@ -6,6 +6,7 @@ type Profile = {
     id: string;
     first_name: string | null;
     last_name: string | null;
+    username: string | null;
     avatar_data: string | null;
 };
 
@@ -52,6 +53,7 @@ export default async function ProfilePage() {
             initialProfile={{
                 first_name: profile?.first_name ?? "",
                 last_name: profile?.last_name ?? "",
+                username: profile?.username ?? "",
                 avatar_data: profile?.avatar_data ?? "",
             }}
             email={

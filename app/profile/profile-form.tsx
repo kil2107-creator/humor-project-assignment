@@ -9,6 +9,7 @@ type Props = {
     initialProfile: {
         first_name: string;
         last_name: string;
+        username: string;
         avatar_data: string;
     };
     email: string;
@@ -26,6 +27,10 @@ export default function ProfileForm({
         initialProfile.last_name
     );
 
+    const [username, setUsername] = useState(
+        initialProfile.username
+    );
+
     const [avatarData, setAvatarData] = useState(
         initialProfile.avatar_data
     );
@@ -36,7 +41,9 @@ export default function ProfileForm({
     const [message, setMessage] = useState("");
 
     const needsProfile =
-        !firstName.trim() || !lastName.trim();
+        !firstName.trim() ||
+        !lastName.trim() ||
+        !username.trim();
 
     function choosePhoto(
         event: ChangeEvent<HTMLInputElement>
@@ -77,17 +84,43 @@ export default function ProfileForm({
 
         const supabase = createClient();
 
+        const cleanUsername =
+            username.trim();
+
+        if (
+            !/^[A-Za-z0-9_]{3,20}$/.test(
+                cleanUsername
+            )
+        ) {
+            setMessage(
+                "Username must be 3–20 characters and contain only letters, numbers, and underscores."
+            );
+            return;
+        }
+
         const { error } = await supabase.rpc(
             "update_my_profile",
             {
                 p_first_name: firstName,
                 p_last_name: lastName,
+                p_username: cleanUsername,
                 p_avatar_data: avatarData || null,
             }
         );
 
         if (error) {
-            setMessage(`Error: ${error.message}`);
+            if (error.code === "23505") {
+                setMessage(
+                    "That username is already taken. Try another one."
+                );
+            } else if (error.code === "23514") {
+                setMessage(
+                    "Username must be 3–20 characters and contain only letters, numbers, and underscores."
+                );
+            } else {
+                setMessage(`Error: ${error.message}`);
+            }
+
             return;
         }
 
@@ -123,8 +156,8 @@ export default function ProfileForm({
                         borderRadius: "6px",
                     }}
                 >
-                    Please add your first and last name to
-                    complete your profile.
+                    Please add your first and last name to complete
+                    your profile.
                 </p>
             )}
 
@@ -193,6 +226,43 @@ export default function ProfileForm({
                             boxSizing: "border-box",
                         }}
                     />
+                </label>
+
+                <label>
+                    Username
+
+                    <input
+                        value={username}
+                        onChange={(e) =>
+                            setUsername(e.target.value)
+                        }
+                        placeholder="e.g. morningside_rat"
+                        maxLength={20}
+                        style={{
+                            display: "block",
+                            width: "100%",
+                            padding: "10px",
+                            marginTop: "6px",
+                            border: "1px solid #999",
+                            borderRadius: "6px",
+                            backgroundColor: "white",
+                            color: "#111",
+                            fontSize: "16px",
+                            boxSizing: "border-box",
+                        }}
+                    />
+
+                    <span
+                        style={{
+                            display: "block",
+                            marginTop: "5px",
+                            color: "#666",
+                            fontSize: "13px",
+                        }}
+                    >
+                        3–20 characters. Letters, numbers,
+                        and underscores only.
+                    </span>
                 </label>
 
                 <div>
@@ -269,10 +339,29 @@ export default function ProfileForm({
             <div
                 style={{
                     marginTop: "30px",
+                    display: "flex",
+                    gap: "12px",
+                    flexWrap: "wrap",
                 }}
             >
                 <Link
-                    href="/members"
+                    href="/"
+                    style={{
+                        display: "inline-block",
+                        padding: "11px 20px",
+                        borderRadius: "6px",
+                        border: "1px solid #999",
+                        backgroundColor: "white",
+                        color: "#111",
+                        textDecoration: "none",
+                        fontSize: "16px",
+                    }}
+                >
+                    ← Back to Feed
+                </Link>
+
+                <Link
+                    href="/create"
                     style={{
                         display: "inline-block",
                         padding: "11px 20px",
@@ -283,7 +372,7 @@ export default function ProfileForm({
                         fontSize: "16px",
                     }}
                 >
-                    Go to members-only page
+                    + Create Caption
                 </Link>
             </div>
 
@@ -306,3 +395,4 @@ export default function ProfileForm({
         </main>
     );
 }
+
