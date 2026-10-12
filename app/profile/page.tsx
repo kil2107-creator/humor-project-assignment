@@ -7,22 +7,20 @@ type Profile = {
     first_name: string | null;
     last_name: string | null;
     username: string | null;
-    avatar_data: string | null;
+    avatar_path: string | null;
 };
 
 export default async function ProfilePage() {
     const supabase = await createClient();
 
     const {
-        data: claimsData,
-        error: claimsError,
-    } = await supabase.auth.getClaims();
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
 
-    if (claimsError || !claimsData?.claims) {
+    if (userError || !user) {
         redirect("/login");
     }
-
-    const claims = claimsData.claims;
 
     const {
         data: profileData,
@@ -40,27 +38,29 @@ export default async function ProfilePage() {
                 }}
             >
                 <p>
-                    Error loading profile: {profileError.message}
+                    Error loading profile:{" "}
+                    {profileError.message}
                 </p>
             </main>
         );
     }
 
-    const profile = profileData as Profile | null;
+    const profile =
+        profileData as Profile | null;
 
     return (
         <ProfileForm
             initialProfile={{
-                first_name: profile?.first_name ?? "",
-                last_name: profile?.last_name ?? "",
-                username: profile?.username ?? "",
-                avatar_data: profile?.avatar_data ?? "",
+                first_name:
+                    profile?.first_name ?? "",
+                last_name:
+                    profile?.last_name ?? "",
+                username:
+                    profile?.username ?? "",
+                avatar_path:
+                    profile?.avatar_path ?? "",
             }}
-            email={
-                typeof claims.email === "string"
-                    ? claims.email
-                    : ""
-            }
+            email={user.email ?? ""}
         />
     );
 }

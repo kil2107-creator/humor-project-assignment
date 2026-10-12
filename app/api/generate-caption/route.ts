@@ -183,20 +183,38 @@ Requirements:
         async function generateWithModel(
             modelName: string
         ) {
-            return await ai.models.generateContent({
-                model: modelName,
-                contents: [
-                    {
-                        inlineData: {
-                            mimeType: imageFile.type,
-                            data: base64Image,
+            const controller =
+                new AbortController();
+
+            const timeoutId =
+                setTimeout(() => {
+                    controller.abort();
+                }, 30000);
+
+            try {
+                return await ai.models.generateContent({
+                    model: modelName,
+                    contents: [
+                        {
+                            inlineData: {
+                                mimeType:
+                                imageFile.type,
+                                data:
+                                base64Image,
+                            },
                         },
+                        {
+                            text: fullPrompt,
+                        },
+                    ],
+                    config: {
+                        abortSignal:
+                        controller.signal,
                     },
-                    {
-                        text: fullPrompt,
-                    },
-                ],
-            });
+                });
+            } finally {
+                clearTimeout(timeoutId);
+            }
         }
 
         /*
@@ -400,6 +418,26 @@ Requirements:
             "Unexpected generate-caption error:",
             error
         );
+
+        if (
+            error instanceof Error &&
+            (
+                error.name === "AbortError" ||
+                error.name ===
+                "RequestTimeoutError" ||
+                error.message
+                    .toLowerCase()
+                    .includes("timeout")
+            )
+        ) {
+            return NextResponse.json(
+                {
+                    error:
+                        "Caption generation is taking longer than expected. Please try again. If this keeps happening, try using a smaller image.",
+                },
+                { status: 504 }
+            );
+        }
 
         return NextResponse.json(
             {

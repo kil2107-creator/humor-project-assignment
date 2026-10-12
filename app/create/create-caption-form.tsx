@@ -54,6 +54,16 @@ export default function CreateCaptionForm() {
     const [error, setError] =
         useState("");
 
+    /*
+     * If posting fails because the user has
+     * not chosen a username yet, show a
+     * direct link to the Profile page.
+     */
+    const [
+        needsUsername,
+        setNeedsUsername,
+    ] = useState(false);
+
     useEffect(() => {
         return () => {
             if (imagePreview) {
@@ -76,6 +86,7 @@ export default function CreateCaptionForm() {
         setImage(file);
         setDraft(null);
         setError("");
+        setNeedsUsername(false);
 
         if (file) {
             setImagePreview(
@@ -108,6 +119,7 @@ export default function CreateCaptionForm() {
 
         setGenerating(true);
         setError("");
+        setNeedsUsername(false);
         setDraft(null);
 
         const formData =
@@ -129,14 +141,30 @@ export default function CreateCaptionForm() {
         );
 
         try {
-            const response =
-                await fetch(
-                    "/api/generate-caption",
-                    {
-                        method: "POST",
-                        body: formData,
-                    }
-                );
+            const controller =
+                new AbortController();
+
+            const timeoutId =
+                setTimeout(() => {
+                    controller.abort();
+                }, 40000);
+
+            let response: Response;
+
+            try {
+                response =
+                    await fetch(
+                        "/api/generate-caption",
+                        {
+                            method: "POST",
+                            body: formData,
+                            signal:
+                            controller.signal,
+                        }
+                    );
+            } finally {
+                clearTimeout(timeoutId);
+            }
 
             const result =
                 await response.json();
@@ -153,9 +181,18 @@ export default function CreateCaptionForm() {
         } catch (error) {
             console.error(error);
 
-            setError(
-                "Could not generate caption."
-            );
+            if (
+                error instanceof Error &&
+                error.name === "AbortError"
+            ) {
+                setError(
+                    "Caption generation is taking longer than expected. Please try again."
+                );
+            } else {
+                setError(
+                    "Could not generate caption."
+                );
+            }
         } finally {
             setGenerating(false);
         }
@@ -168,6 +205,7 @@ export default function CreateCaptionForm() {
 
         setPosting(true);
         setError("");
+        setNeedsUsername(false);
 
         const formData =
             new FormData();
@@ -211,13 +249,38 @@ export default function CreateCaptionForm() {
                 await response.json();
 
             if (!response.ok) {
-                setError(
+                const errorMessage =
                     result.error ??
-                    "Could not post caption."
-                );
+                    "Could not post caption.";
+
+                setError(errorMessage);
+
+                /*
+                 * The post-caption API returns:
+                 *
+                 * "Please choose a username in your
+                 * profile before posting."
+                 *
+                 * If we receive that message, give the
+                 * user an obvious route to fix it.
+                 */
+                if (
+                    errorMessage
+                        .toLowerCase()
+                        .includes(
+                            "choose a username"
+                        )
+                ) {
+                    setNeedsUsername(true);
+                }
+
                 return;
             }
 
+            /*
+             * Posting worked.
+             * Send the user back to the feed.
+             */
             router.push("/");
             router.refresh();
         } catch (error) {
@@ -316,6 +379,8 @@ export default function CreateCaptionForm() {
                                 );
 
                                 setDraft(null);
+                                setError("");
+                                setNeedsUsername(false);
                             }}
                             rows={4}
                             placeholder="Example: Make fun of how long we waited for the 1 train..."
@@ -363,6 +428,9 @@ export default function CreateCaptionForm() {
                                             setDraft(
                                                 null
                                             );
+
+                                            setError("");
+                                            setNeedsUsername(false);
                                         }}
                                         style={{
                                             padding:
@@ -412,14 +480,38 @@ export default function CreateCaptionForm() {
                 </form>
 
                 {error && (
-                    <p
+                    <div
                         style={{
                             marginTop: "20px",
-                            color: "#b00020",
+                            padding: "14px",
+                            borderRadius: "10px",
+                            border:
+                                "1px solid #e5b7bd",
+                            background:
+                                "var(--surface)",
                         }}
                     >
-                        {error}
-                    </p>
+                        <p
+                            style={{
+                                margin: 0,
+                                color: "#b00020",
+                            }}
+                        >
+                            {error}
+                        </p>
+
+                        {needsUsername && (
+                            <Link
+                                href="/profile"
+                                className="secondary-button"
+                                style={{
+                                    marginTop: "12px",
+                                }}
+                            >
+                                Choose a Username →
+                            </Link>
+                        )}
+                    </div>
                 )}
 
                 {draft && (
@@ -437,18 +529,28 @@ export default function CreateCaptionForm() {
                         }}
                     >
                         {imagePreview && (
-                            <img
-                                src={imagePreview}
-                                alt="Caption preview"
+                            <div
                                 style={{
-                                    display: "block",
                                     width: "100%",
-                                    maxHeight:
-                                        "500px",
-                                    objectFit:
-                                        "cover",
+                                    height: "500px",
+                                    backgroundColor: "#000",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    overflow: "hidden",
                                 }}
-                            />
+                            >
+                                <img
+                                    src={imagePreview}
+                                    alt="Caption preview"
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "contain",
+                                        display: "block",
+                                    }}
+                                />
+                            </div>
                         )}
 
                         <div

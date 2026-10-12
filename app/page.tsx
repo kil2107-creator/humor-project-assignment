@@ -15,6 +15,18 @@ type CaptionGeneration = {
     creator_username: string | null;
 };
 
+function formatPostedAt(createdAt: string) {
+    return new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZoneName: "short",
+    }).format(new Date(createdAt));
+}
+
 type Props = {
     searchParams: Promise<{
         sort?: string;
@@ -233,11 +245,13 @@ export default async function Home({
                                     key={generation.id}
                                     className="caption-card"
                                 >
-                                    <img
-                                        src={publicUrl}
-                                        alt="Caption submission"
-                                        className="caption-image"
-                                    />
+                                    <div className="caption-image-frame">
+                                        <img
+                                            src={publicUrl}
+                                            alt="Caption submission"
+                                            className="caption-image"
+                                        />
+                                    </div>
 
                                     <div className="caption-content">
                                         {user && (
@@ -253,8 +267,11 @@ export default async function Home({
                                         </p>
 
                                         <p className="caption-meta">
-                                            AI generated •{" "}
-                                            {generation.model}
+                                            AI generated • {generation.model}
+                                        </p>
+
+                                        <p className="caption-time">
+                                            Posted {formatPostedAt(generation.created_at)}
                                         </p>
 
                                         <VoteButtons
