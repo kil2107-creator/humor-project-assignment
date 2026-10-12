@@ -110,7 +110,7 @@ export default async function Home({
 
     let userVotes: Record<string, number> = {};
     let ownGenerationIds = new Set<string>();
-
+    let currentUserAvatarUrl = "";
 
     if (user) {
         const { data: votes } = await supabase
@@ -124,6 +124,7 @@ export default async function Home({
                 vote.value,
             ])
         );
+
         const { data: ownGenerations } =
             await supabase
                 .from("caption_generations")
@@ -135,6 +136,25 @@ export default async function Home({
                 (generation) => generation.id
             )
         );
+
+        const { data: profile } =
+            await supabase
+                .from("profiles")
+                .select("avatar_path")
+                .eq("id", user.id)
+                .maybeSingle();
+
+        if (profile?.avatar_path) {
+            const {
+                data: { publicUrl },
+            } = supabase.storage
+                .from("avatars")
+                .getPublicUrl(
+                    profile.avatar_path
+                );
+
+            currentUserAvatarUrl = publicUrl;
+        }
     }
 
     return (
@@ -172,7 +192,25 @@ export default async function Home({
                                 <Link
                                     href="/profile"
                                     className="secondary-button"
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "8px",
+                                    }}
                                 >
+                                    {currentUserAvatarUrl && (
+                                        <img
+                                            src={currentUserAvatarUrl}
+                                            alt=""
+                                            width={26}
+                                            height={26}
+                                            style={{
+                                                borderRadius: "50%",
+                                                objectFit: "cover",
+                                            }}
+                                        />
+                                    )}
+
                                     Profile
                                 </Link>
                             </>
