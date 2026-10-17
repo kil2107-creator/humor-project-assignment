@@ -4,10 +4,12 @@ import {
     useEffect,
     useState,
 } from "react";
+
 import type {
     ChangeEvent,
     FormEvent,
 } from "react";
+
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
@@ -70,8 +72,8 @@ export default function ProfileForm({
         );
 
     /*
-     * This is now only a Storage path,
-     * NOT Base64 image data.
+     * Only the Supabase Storage path
+     * is stored in the database.
      */
     const [avatarPath, setAvatarPath] =
         useState(
@@ -79,9 +81,8 @@ export default function ProfileForm({
         );
 
     /*
-     * The actual selected File is kept
-     * temporarily in the browser until
-     * the user clicks Save profile.
+     * A newly chosen image stays as a File
+     * in the browser until Save Profile.
      */
     const [
         selectedFile,
@@ -94,8 +95,8 @@ export default function ProfileForm({
     ] = useState("");
 
     /*
-     * Temporary browser-only preview
-     * for a newly selected photo.
+     * Temporary local preview for a newly
+     * selected profile image.
      */
     const [
         localPreviewUrl,
@@ -114,8 +115,8 @@ export default function ProfileForm({
         !username.trim();
 
     /*
-     * Get the public URL of the currently
-     * saved avatar.
+     * Get the public URL for the avatar
+     * already stored in Supabase.
      */
     const savedAvatarUrl =
         avatarPath
@@ -127,18 +128,37 @@ export default function ProfileForm({
             : "";
 
     /*
-     * If the user just selected a new photo,
-     * show that preview.
-     *
-     * Otherwise show the saved Storage image.
+     * Prefer a newly selected photo preview.
+     * Otherwise show the currently saved photo.
      */
     const displayedAvatar =
         localPreviewUrl ||
         savedAvatarUrl;
 
     /*
-     * Clean up browser-created image preview
-     * URLs when they are replaced/unmounted.
+     * Determines whether a status message
+     * should use success/neutral or error styling.
+     */
+    const messageIsError =
+        message.startsWith("Error:") ||
+        message.includes(
+            "already taken"
+        ) ||
+        message.includes(
+            "must be"
+        ) ||
+        message.includes(
+            "Please choose"
+        ) ||
+        message.includes(
+            "Could not"
+        ) ||
+        message.includes(
+            "must be signed in"
+        );
+
+    /*
+     * Clean up temporary browser image URLs.
      */
     useEffect(() => {
         return () => {
@@ -183,16 +203,11 @@ export default function ProfileForm({
         }
 
         setSelectedFile(file);
+
         setSelectedFileName(
             file.name
         );
 
-        /*
-         * This URL exists only locally
-         * in the browser for previewing.
-         *
-         * It is NOT saved in Supabase.
-         */
         setLocalPreviewUrl(
             URL.createObjectURL(file)
         );
@@ -210,8 +225,8 @@ export default function ProfileForm({
             username.trim();
 
         /*
-         * Validate username before
-         * uploading anything.
+         * Validate username before uploading
+         * a new profile photo.
          */
         if (
             !/^[A-Za-z0-9_]{3,20}$/.test(
@@ -228,7 +243,7 @@ export default function ProfileForm({
         setMessage("");
 
         /*
-         * Verify the signed-in user.
+         * Confirm the user is authenticated.
          */
         const {
             data: { user },
@@ -243,16 +258,14 @@ export default function ProfileForm({
             setMessage(
                 "You must be signed in to save your profile."
             );
+
             setSaving(false);
             return;
         }
 
         /*
-         * Start by preserving the current
-         * avatar path.
-         *
-         * If a new image was chosen,
-         * this gets replaced below.
+         * Keep the existing avatar unless
+         * a new one has been selected.
          */
         let newAvatarPath =
             avatarPath || null;
@@ -261,8 +274,7 @@ export default function ProfileForm({
             false;
 
         /*
-         * Upload a new avatar only if the
-         * user selected a new file.
+         * Upload a new avatar if needed.
          */
         if (selectedFile) {
             const extension =
@@ -307,11 +319,10 @@ export default function ProfileForm({
         }
 
         /*
-         * Save the user's text fields and
-         * avatar Storage PATH in profiles.
+         * Update profile information.
          *
-         * No image data is stored in the
-         * relational database.
+         * Only avatar_path is stored in
+         * the relational database.
          */
         const { error } =
             await supabase.rpc(
@@ -330,9 +341,9 @@ export default function ProfileForm({
 
         if (error) {
             /*
-             * If we uploaded a new image but
-             * the database update failed,
-             * clean up the new Storage file.
+             * If the new avatar uploaded but
+             * the profile save failed, remove
+             * that new file from Storage.
              */
             if (
                 uploadedNewAvatar &&
@@ -370,11 +381,8 @@ export default function ProfileForm({
         }
 
         /*
-         * The profile update succeeded.
-         *
-         * If the user uploaded a new avatar,
-         * we can now safely delete their old
-         * avatar file from Storage.
+         * After the profile successfully saves,
+         * remove the old avatar from Storage.
          */
         if (
             uploadedNewAvatar &&
@@ -395,10 +403,6 @@ export default function ProfileForm({
             if (
                 oldAvatarDeleteError
             ) {
-                /*
-                 * This is not serious enough
-                 * to fail the profile save.
-                 */
                 console.warn(
                     "Could not remove old avatar:",
                     oldAvatarDeleteError
@@ -407,8 +411,7 @@ export default function ProfileForm({
         }
 
         /*
-         * Update local state to the newly
-         * saved Storage path.
+         * Sync the new saved state locally.
          */
         setAvatarPath(
             newAvatarPath ?? ""
@@ -433,431 +436,357 @@ export default function ProfileForm({
     }
 
     return (
-        <main
-            style={{
-                maxWidth: "650px",
-                margin:
-                    "50px auto",
-                padding: "40px",
-                fontFamily:
-                    "Arial",
-                color: "#111",
-                backgroundColor:
-                    "white",
-            }}
-        >
-            <h1>Profile</h1>
+        <main className="product-page">
+            <div className="product-container">
 
-            {needsProfile && (
-                <p
-                    style={{
-                        padding:
-                            "12px",
-                        background:
-                            "#f3f3f3",
-                        borderRadius:
-                            "6px",
-                    }}
-                >
-                    Please add your
-                    first name, last
-                    name, and username
-                    to complete your
-                    profile.
-                </p>
-            )}
+                {/* Shared product branding */}
 
-            <p>{email}</p>
-
-            {displayedAvatar && (
-                <img
-                    src={
-                        displayedAvatar
-                    }
-                    alt="Profile"
-                    width={120}
-                    height={120}
-                    style={{
-                        borderRadius:
-                            "50%",
-                        objectFit:
-                            "cover",
-                        border:
-                            "1px solid #ddd",
-                    }}
-                />
-            )}
-
-            <form
-                onSubmit={
-                    saveProfile
-                }
-                style={{
-                    display:
-                        "grid",
-                    gap: "20px",
-                    marginTop:
-                        "24px",
-                }}
-            >
-                <label>
-                    First name
-
-                    <input
-                        value={
-                            firstName
-                        }
-                        onChange={(
-                            event
-                        ) => {
-                            setFirstName(
-                                event
-                                    .target
-                                    .value
-                            );
-                        }}
-                        required
-                        style={{
-                            display:
-                                "block",
-                            width:
-                                "100%",
-                            padding:
-                                "10px",
-                            marginTop:
-                                "6px",
-                            border:
-                                "1px solid #999",
-                            borderRadius:
-                                "6px",
-                            backgroundColor:
-                                "white",
-                            color:
-                                "#111",
-                            fontSize:
-                                "16px",
-                            boxSizing:
-                                "border-box",
-                        }}
-                    />
-                </label>
-
-                <label>
-                    Last name
-
-                    <input
-                        value={
-                            lastName
-                        }
-                        onChange={(
-                            event
-                        ) => {
-                            setLastName(
-                                event
-                                    .target
-                                    .value
-                            );
-                        }}
-                        required
-                        style={{
-                            display:
-                                "block",
-                            width:
-                                "100%",
-                            padding:
-                                "10px",
-                            marginTop:
-                                "6px",
-                            border:
-                                "1px solid #999",
-                            borderRadius:
-                                "6px",
-                            backgroundColor:
-                                "white",
-                            color:
-                                "#111",
-                            fontSize:
-                                "16px",
-                            boxSizing:
-                                "border-box",
-                        }}
-                    />
-                </label>
-
-                <label>
-                    Username
-
-                    <input
-                        value={
-                            username
-                        }
-                        onChange={(
-                            event
-                        ) => {
-                            setUsername(
-                                event
-                                    .target
-                                    .value
-                            );
-                        }}
-                        placeholder="e.g. morningside_rat"
-                        minLength={3}
-                        maxLength={20}
-                        pattern="[A-Za-z0-9_]{3,20}"
-                        title="3–20 characters. Letters, numbers, and underscores only."
-                        required
-                        style={{
-                            display:
-                                "block",
-                            width:
-                                "100%",
-                            padding:
-                                "10px",
-                            marginTop:
-                                "6px",
-                            border:
-                                "1px solid #999",
-                            borderRadius:
-                                "6px",
-                            backgroundColor:
-                                "white",
-                            color:
-                                "#111",
-                            fontSize:
-                                "16px",
-                            boxSizing:
-                                "border-box",
-                        }}
-                    />
-
-                    <span
-                        style={{
-                            display:
-                                "block",
-                            marginTop:
-                                "5px",
-                            color:
-                                "#666",
-                            fontSize:
-                                "13px",
-                        }}
-                    >
-                        3–20 characters.
-                        Letters, numbers,
-                        and underscores
-                        only.
-                    </span>
-                </label>
-
-                <div>
-                    <p
-                        style={{
-                            margin:
-                                "0 0 8px 0",
-                        }}
-                    >
-                        Profile photo
-                    </p>
-
-                    <label
-                        htmlFor="profile-photo"
-                        style={{
-                            display:
-                                "inline-block",
-                            padding:
-                                "10px 18px",
-                            backgroundColor:
-                                "#f3f3f3",
-                            color:
-                                "#111",
-                            border:
-                                "1px solid #999",
-                            borderRadius:
-                                "6px",
-                            cursor:
-                                "pointer",
-                            fontSize:
-                                "16px",
-                        }}
-                    >
-                        Choose photo
-                    </label>
-
-                    <input
-                        id="profile-photo"
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={
-                            choosePhoto
-                        }
-                        style={{
-                            display:
-                                "none",
-                        }}
-                    />
-
-                    {selectedFileName && (
-                        <span
-                            style={{
-                                marginLeft:
-                                    "12px",
-                                fontSize:
-                                    "14px",
-                                color:
-                                    "#444",
-                            }}
-                        >
-                            {
-                                selectedFileName
-                            }
-                        </span>
-                    )}
-
-                    <p
-                        style={{
-                            margin:
-                                "8px 0 0",
-                            color:
-                                "#666",
-                            fontSize:
-                                "13px",
-                        }}
-                    >
-                        JPEG, PNG, or
-                        WebP. Maximum
-                        2 MB.
-                    </p>
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={
-                        saving
-                    }
-                    style={{
-                        padding:
-                            "11px 20px",
-                        border:
-                            "none",
-                        borderRadius:
-                            "6px",
-                        backgroundColor:
-                            "#111",
-                        color:
-                            "white",
-                        fontSize:
-                            "16px",
-                        cursor:
-                            saving
-                                ? "not-allowed"
-                                : "pointer",
-                        width:
-                            "fit-content",
-                        opacity:
-                            saving
-                                ? 0.6
-                                : 1,
-                    }}
-                >
-                    {saving
-                        ? "Saving..."
-                        : "Save profile"}
-                </button>
-            </form>
-
-            {message && (
-                <p
-                    style={{
-                        marginTop:
-                            "16px",
-                    }}
-                >
-                    {message}
-                </p>
-            )}
-
-            <div
-                style={{
-                    marginTop:
-                        "30px",
-                    display:
-                        "flex",
-                    gap: "12px",
-                    flexWrap:
-                        "wrap",
-                }}
-            >
                 <Link
                     href="/"
-                    style={{
-                        display:
-                            "inline-block",
-                        padding:
-                            "11px 20px",
-                        borderRadius:
-                            "6px",
-                        border:
-                            "1px solid #999",
-                        backgroundColor:
-                            "white",
-                        color:
-                            "#111",
-                        textDecoration:
-                            "none",
-                        fontSize:
-                            "16px",
-                    }}
+                    className="product-brand"
                 >
-                    ← Back to Feed
+                    <span className="product-brand-kicker">
+                        Columbia × NYC
+                    </span>
+
+                    <span className="product-brand-name">
+                        Morningside Caption Club
+                    </span>
                 </Link>
 
-                <Link
-                    href="/create"
-                    style={{
-                        display:
-                            "inline-block",
-                        padding:
-                            "11px 20px",
-                        borderRadius:
-                            "6px",
-                        backgroundColor:
-                            "#111",
-                        color:
-                            "white",
-                        textDecoration:
-                            "none",
-                        fontSize:
-                            "16px",
-                    }}
-                >
-                    + Create Caption
-                </Link>
+                <h1 className="product-heading">
+                    Profile
+                </h1>
+
+                <p className="product-subtitle">
+                    Manage your identity and
+                    account.
+                </p>
+
+                {/* Incomplete profile warning */}
+
+                {needsProfile && (
+                    <div
+                        className="product-message"
+                        style={{
+                            marginBottom:
+                                "20px",
+                            marginTop: 0,
+                        }}
+                    >
+                        Please add your first
+                        name, last name, and
+                        username to complete
+                        your profile.
+                    </div>
+                )}
+
+                {/* Main profile card */}
+
+                <section className="product-panel">
+
+                    {/* Avatar + account identity */}
+
+                    <div className="profile-top">
+                        {displayedAvatar ? (
+                            <img
+                                src={
+                                    displayedAvatar
+                                }
+                                alt="Profile"
+                                className="profile-avatar"
+                            />
+                        ) : (
+                            <div
+                                className="profile-avatar"
+                                style={{
+                                    display:
+                                        "flex",
+                                    alignItems:
+                                        "center",
+                                    justifyContent:
+                                        "center",
+                                    background:
+                                        "var(--surface-secondary)",
+                                    color:
+                                        "var(--accent)",
+                                    fontSize:
+                                        "34px",
+                                    fontWeight:
+                                        800,
+                                }}
+                            >
+                                {firstName
+                                        .trim()
+                                        .charAt(0)
+                                        .toUpperCase() ||
+                                    username
+                                        .trim()
+                                        .charAt(
+                                            0
+                                        )
+                                        .toUpperCase() ||
+                                    "?"}
+                            </div>
+                        )}
+
+                        <div>
+                            <p
+                                style={{
+                                    margin:
+                                        "0 0 5px",
+                                    fontSize:
+                                        "20px",
+                                    fontWeight:
+                                        700,
+                                }}
+                            >
+                                {firstName ||
+                                lastName
+                                    ? `${firstName} ${lastName}`.trim()
+                                    : "Your profile"}
+                            </p>
+
+                            {username && (
+                                <p
+                                    style={{
+                                        margin:
+                                            "0 0 5px",
+                                        color:
+                                            "var(--accent)",
+                                        fontSize:
+                                            "14px",
+                                        fontWeight:
+                                            700,
+                                    }}
+                                >
+                                    @
+                                    {
+                                        username
+                                    }
+                                </p>
+                            )}
+
+                            <p className="profile-email">
+                                {email}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Editable profile fields */}
+
+                    <form
+                        onSubmit={
+                            saveProfile
+                        }
+                        className="product-form"
+                    >
+                        <div className="product-field">
+                            <label
+                                htmlFor="first-name"
+                                className="product-label"
+                            >
+                                First name
+                            </label>
+
+                            <input
+                                id="first-name"
+                                value={
+                                    firstName
+                                }
+                                onChange={(
+                                    event
+                                ) => {
+                                    setFirstName(
+                                        event
+                                            .target
+                                            .value
+                                    );
+
+                                    setMessage(
+                                        ""
+                                    );
+                                }}
+                                required
+                                className="product-input"
+                            />
+                        </div>
+
+                        <div className="product-field">
+                            <label
+                                htmlFor="last-name"
+                                className="product-label"
+                            >
+                                Last name
+                            </label>
+
+                            <input
+                                id="last-name"
+                                value={
+                                    lastName
+                                }
+                                onChange={(
+                                    event
+                                ) => {
+                                    setLastName(
+                                        event
+                                            .target
+                                            .value
+                                    );
+
+                                    setMessage(
+                                        ""
+                                    );
+                                }}
+                                required
+                                className="product-input"
+                            />
+                        </div>
+
+                        <div className="product-field">
+                            <label
+                                htmlFor="username"
+                                className="product-label"
+                            >
+                                Username
+                            </label>
+
+                            <input
+                                id="username"
+                                value={
+                                    username
+                                }
+                                onChange={(
+                                    event
+                                ) => {
+                                    setUsername(
+                                        event
+                                            .target
+                                            .value
+                                    );
+
+                                    setMessage(
+                                        ""
+                                    );
+                                }}
+                                placeholder="e.g. morningside_rat"
+                                minLength={3}
+                                maxLength={20}
+                                pattern="[A-Za-z0-9_]{3,20}"
+                                title="3–20 characters. Letters, numbers, and underscores only."
+                                required
+                                className="product-input"
+                            />
+
+                            <p className="product-helper">
+                                Your username is
+                                visible with your
+                                captions to signed-in
+                                users. Use 3–20
+                                letters, numbers, or
+                                underscores.
+                            </p>
+                        </div>
+
+                        {/* Profile photo */}
+
+                        <div className="product-field">
+                            <span className="product-label">
+                                Profile photo
+                            </span>
+
+                            <div className="profile-photo-controls">
+                                <label
+                                    htmlFor="profile-photo"
+                                    className="secondary-button"
+                                >
+                                    Choose photo
+                                </label>
+
+                                <input
+                                    id="profile-photo"
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    onChange={
+                                        choosePhoto
+                                    }
+                                    style={{
+                                        display:
+                                            "none",
+                                    }}
+                                />
+
+                                {selectedFileName && (
+                                    <span className="product-helper">
+                                        {
+                                            selectedFileName
+                                        }
+                                    </span>
+                                )}
+                            </div>
+
+                            <p className="product-helper">
+                                JPEG, PNG, or WebP.
+                                Maximum 2 MB.
+                            </p>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={
+                                saving
+                            }
+                            className="primary-button"
+                        >
+                            {saving
+                                ? "Saving..."
+                                : "Save Profile"}
+                        </button>
+                    </form>
+                </section>
+
+                {/* Save / error message */}
+
+                {message && (
+                    <div
+                        className={
+                            messageIsError
+                                ? "product-error"
+                                : "product-message"
+                        }
+                    >
+                        {message}
+                    </div>
+                )}
+
+                {/* Navigation */}
+
+                <div className="product-actions">
+                    <Link
+                        href="/"
+                        className="secondary-button"
+                    >
+                        ← Back to Feed
+                    </Link>
+
+                    <Link
+                        href="/create"
+                        className="primary-button"
+                    >
+                        + Create Caption
+                    </Link>
+
+                    <button
+                        onClick={
+                            signOut
+                        }
+                        type="button"
+                        className="secondary-button"
+                    >
+                        Sign out
+                    </button>
+                </div>
             </div>
-
-            <button
-                onClick={signOut}
-                type="button"
-                style={{
-                    marginTop:
-                        "20px",
-                    padding:
-                        "11px 20px",
-                    border:
-                        "1px solid #999",
-                    borderRadius:
-                        "6px",
-                    backgroundColor:
-                        "white",
-                    color:
-                        "#111",
-                    fontSize:
-                        "16px",
-                    cursor:
-                        "pointer",
-                }}
-            >
-                Sign out
-            </button>
         </main>
     );
 }

@@ -13,6 +13,8 @@
 
   --accent: #6c4cff;
 
+  --danger: #b00020;
+
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
 }
 
@@ -31,6 +33,8 @@
     --primary-text: #111111;
 
     --accent: #9c87ff;
+
+    --danger: #ff7b8a;
 
     --shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
   }
@@ -52,15 +56,79 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
 a {
   color: inherit;
 }
 
-/* Main feed */
+
+/* =====================================================
+   SHARED BUTTONS
+   ===================================================== */
+
+.primary-button,
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 11px 18px;
+
+  border-radius: 9px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+          transform 0.15s ease,
+          opacity 0.15s ease,
+          border-color 0.15s ease;
+}
+
+.primary-button {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--primary-text);
+}
+
+.secondary-button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.primary-button:hover:not(:disabled),
+.secondary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+/* =====================================================
+   MAIN FEED
+   ===================================================== */
 
 .feed-page {
   min-height: 100vh;
+
   padding: 48px 20px 80px;
+
   background:
           radial-gradient(
                   circle at top left,
@@ -82,14 +150,17 @@ a {
 
 .eyebrow {
   margin: 0 0 10px;
+
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 1.5px;
+
   text-transform: uppercase;
 }
 
 .feed-title {
   margin: 0;
+
   font-size: clamp(36px, 6vw, 52px);
   line-height: 1.05;
   letter-spacing: -1.5px;
@@ -97,17 +168,23 @@ a {
 
 .feed-subtitle {
   margin: 14px 0 0;
+
   color: var(--text-secondary);
+
   font-size: 18px;
   line-height: 1.5;
 }
 
 .today-vibe {
   margin-top: 24px;
+
   padding: 14px 16px;
+
   border: 1px solid var(--border);
   border-radius: 12px;
+
   background: var(--surface-secondary);
+
   font-size: 14px;
 }
 
@@ -119,67 +196,52 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+
   margin-top: 24px;
 }
 
-.primary-button,
-.secondary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 11px 18px;
-  border-radius: 9px;
-  font-size: 15px;
-  font-weight: 600;
-  text-decoration: none;
-  transition:
-          transform 0.15s ease,
-          opacity 0.15s ease;
-}
 
-.primary-button {
-  border: 1px solid var(--primary);
-  background: var(--primary);
-  color: var(--primary-text);
-}
-
-.secondary-button {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-}
-
-.primary-button:hover,
-.secondary-button:hover {
-  transform: translateY(-1px);
-}
-
-/* Feed sorting */
+/* =====================================================
+   FEED SORTING
+   ===================================================== */
 
 .feed-tabs {
   display: flex;
   gap: 8px;
+
   margin: 30px 0 20px;
 }
 
 .feed-tab {
   padding: 8px 14px;
+
   border: 1px solid var(--border);
   border-radius: 999px;
+
   background: var(--surface);
   color: var(--text-secondary);
+
   font-size: 14px;
   font-weight: 600;
+
   text-decoration: none;
+}
+
+.feed-tab:hover {
+  border-color: var(--accent);
 }
 
 .feed-tab-active {
   background: var(--primary);
   color: var(--primary-text);
+
   border-color: var(--primary);
 }
 
-/* Caption feed */
+
+/* =====================================================
+   CAPTION FEED
+   ===================================================== */
 
 .caption-feed {
   display: grid;
@@ -188,26 +250,34 @@ a {
 
 .caption-card {
   overflow: hidden;
+
   border: 1px solid var(--border);
   border-radius: 18px;
+
   background: var(--surface);
+
   box-shadow: var(--shadow);
 }
 
 .caption-image-frame {
   width: 100%;
   height: 520px;
-  background: #000;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   overflow: hidden;
+
+  background: #000;
 }
 
 .caption-image {
   width: 100%;
   height: 100%;
+
   object-fit: contain;
+
   display: block;
 }
 
@@ -215,30 +285,47 @@ a {
   padding: 24px;
 }
 
+.caption-author {
+  margin: 0 0 8px;
+
+  color: var(--accent);
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .caption-text {
   margin: 0;
+
   font-size: 23px;
   font-weight: 700;
   line-height: 1.35;
 }
 
-.caption-time {
-  margin: 5px 0 0;
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
 .caption-meta {
   margin: 12px 0 0;
+
   color: var(--text-secondary);
+
   font-size: 13px;
+}
+
+.caption-time {
+  margin: 5px 0 0;
+
+  color: var(--text-secondary);
+
+  font-size: 12px;
 }
 
 .empty-state {
   padding: 45px 24px;
+
   border: 1px solid var(--border);
   border-radius: 18px;
+
   background: var(--surface);
+
   text-align: center;
 }
 
@@ -246,7 +333,10 @@ a {
   margin-top: 0;
 }
 
-/* Voting */
+
+/* =====================================================
+   VOTING
+   ===================================================== */
 
 .vote-area {
   margin-top: 18px;
@@ -261,20 +351,31 @@ a {
 .vote-button {
   width: 42px;
   height: 42px;
+
   border: 1px solid var(--border);
   border-radius: 50%;
+
   background: var(--surface);
   color: var(--text);
+
   font-size: 20px;
+
   cursor: pointer;
+
+  transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          transform 0.15s ease;
 }
 
 .vote-button:hover:not(:disabled) {
   border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .vote-button-active {
   border-color: var(--accent);
+
   background: var(--accent);
   color: white;
 }
@@ -285,44 +386,423 @@ a {
 
 .score {
   min-width: 28px;
+
   text-align: center;
+
   font-weight: 700;
 }
 
 .vote-message {
   margin: 8px 0 0;
+
   color: var(--text-secondary);
+
   font-size: 13px;
 }
 
 .sign-in-vote {
   display: inline-block;
+
   margin-top: 16px;
+
+  color: var(--accent);
+
   font-weight: 600;
+}
+
+
+/* =====================================================
+   SHARED CREATE + PROFILE PAGE
+   ===================================================== */
+
+.product-page {
+  min-height: 100vh;
+
+  padding: 48px 20px 80px;
+
+  background:
+          radial-gradient(
+                  circle at top left,
+                  rgba(108, 76, 255, 0.1),
+                  transparent 35%
+          ),
+          var(--background);
+}
+
+.product-container {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+
+/* Shared brand header */
+
+.product-brand {
+  display: inline-block;
+
+  margin-bottom: 28px;
+
+  text-decoration: none;
+}
+
+.product-brand:hover .product-brand-name {
   color: var(--accent);
 }
 
-/* Responsive */
+.product-brand-kicker {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: var(--accent);
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+
+  text-transform: uppercase;
+}
+
+.product-brand-name {
+  display: block;
+
+  color: var(--text);
+
+  font-size: 18px;
+  font-weight: 800;
+
+  transition: color 0.15s ease;
+}
+
+
+/* Page heading */
+
+.product-heading {
+  margin: 0;
+
+  color: var(--text);
+
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -0.7px;
+}
+
+.product-subtitle {
+  margin: 10px 0 28px;
+
+  color: var(--text-secondary);
+
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+
+/* Shared white card/panel */
+
+.product-panel {
+  padding: 28px;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow);
+}
+
+.product-form {
+  display: grid;
+  gap: 20px;
+}
+
+.product-field {
+  display: grid;
+  gap: 7px;
+}
+
+.product-field label,
+.product-label {
+  color: var(--text);
+
+  font-size: 15px;
+  font-weight: 600;
+}
+
+
+/* Shared inputs */
+
+.product-input {
+  width: 100%;
+
+  padding: 11px 12px;
+
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  background: var(--surface);
+  color: var(--text);
+
+  font-size: 16px;
+}
+
+textarea.product-input {
+  min-height: 110px;
+
+  resize: vertical;
+}
+
+.product-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+
+  border-color: transparent;
+}
+
+.product-helper {
+  margin: 5px 0 0;
+
+  color: var(--text-secondary);
+
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+
+/* Shared action rows */
+
+.product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin-top: 24px;
+}
+
+
+/* =====================================================
+   CREATE CAPTION PAGE
+   ===================================================== */
+
+.vibe-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin-top: 10px;
+}
+
+.vibe-button {
+  padding: 9px 14px;
+
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  background: var(--surface);
+  color: var(--text);
+
+  cursor: pointer;
+
+  transition:
+          border-color 0.15s ease,
+          background 0.15s ease,
+          color 0.15s ease;
+}
+
+.vibe-button:hover {
+  border-color: var(--accent);
+}
+
+.vibe-button-active {
+  border-color: var(--primary);
+
+  background: var(--primary);
+  color: var(--primary-text);
+}
+
+.caption-preview-card {
+  margin-top: 32px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: 18px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow);
+}
+
+.caption-preview-image-frame {
+  width: 100%;
+  height: 500px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background: #000;
+}
+
+.caption-preview-image {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  display: block;
+}
+
+.caption-preview-content {
+  padding: 24px;
+}
+
+.preview-label {
+  margin: 0 0 12px;
+
+  color: var(--accent);
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+
+  text-transform: uppercase;
+}
+
+.preview-caption {
+  margin: 0;
+
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+
+/* =====================================================
+   PROFILE PAGE
+   ===================================================== */
+
+.profile-top {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  margin-bottom: 24px;
+}
+
+.profile-avatar {
+  width: 110px;
+  height: 110px;
+
+  flex-shrink: 0;
+
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  box-shadow: var(--shadow);
+}
+
+.profile-photo-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profile-email {
+  margin: 0;
+
+  color: var(--text-secondary);
+
+  font-size: 14px;
+}
+
+
+/* =====================================================
+   MESSAGES
+   ===================================================== */
+
+.product-message {
+  margin-top: 18px;
+
+  padding: 13px 15px;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--surface-secondary);
+
+  color: var(--text);
+
+  font-size: 14px;
+}
+
+.product-error {
+  margin-top: 18px;
+
+  padding: 13px 15px;
+
+  border: 1px solid
+  color-mix(in srgb, var(--danger) 30%, var(--border));
+  border-radius: 10px;
+
+  background: var(--surface);
+
+  color: var(--danger);
+
+  font-size: 14px;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
 
 @media (max-width: 600px) {
-  .caption-image-frame {
-    height: 380px;
-  }
-  .feed-page {
+  .feed-page,
+  .product-page {
     padding: 32px 16px 60px;
   }
 
-  .caption-content {
+  .caption-image-frame {
+    height: 380px;
+  }
+
+  .caption-preview-image-frame {
+    height: 380px;
+  }
+
+  .caption-content,
+  .caption-preview-content {
     padding: 20px;
   }
 
-  .caption-text {
+  .caption-text,
+  .preview-caption {
     font-size: 20px;
   }
+
+  .product-heading {
+    font-size: 32px;
+  }
+
+  .product-panel {
+    padding: 22px;
+  }
+
+  .profile-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-avatar {
+    width: 96px;
+    height: 96px;
+  }
 }
-.caption-author {
-  margin: 0 0 8px;
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 700;
-}
+
+

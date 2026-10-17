@@ -5,6 +5,10 @@ import {
     useState,
 } from "react";
 
+import type {
+    FormEvent,
+} from "react";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -54,16 +58,14 @@ export default function CreateCaptionForm() {
     const [error, setError] =
         useState("");
 
-    /*
-     * If posting fails because the user has
-     * not chosen a username yet, show a
-     * direct link to the Profile page.
-     */
     const [
         needsUsername,
         setNeedsUsername,
     ] = useState(false);
 
+    /*
+     * Clean up temporary browser image URLs.
+     */
     useEffect(() => {
         return () => {
             if (imagePreview) {
@@ -98,8 +100,7 @@ export default function CreateCaptionForm() {
     }
 
     async function generateCaption(
-        event:
-        React.FormEvent<HTMLFormElement>
+        event: FormEvent<HTMLFormElement>
     ) {
         event.preventDefault();
 
@@ -141,6 +142,11 @@ export default function CreateCaptionForm() {
         );
 
         try {
+            /*
+             * Browser-side timeout so the page
+             * does not stay on "Generating..."
+             * forever if Gemini hangs.
+             */
             const controller =
                 new AbortController();
 
@@ -186,7 +192,7 @@ export default function CreateCaptionForm() {
                 error.name === "AbortError"
             ) {
                 setError(
-                    "Caption generation is taking longer than expected. Please try again."
+                    "Caption generation is taking longer than expected. Please try again. If this keeps happening, try using a smaller image."
                 );
             } else {
                 setError(
@@ -253,16 +259,14 @@ export default function CreateCaptionForm() {
                     result.error ??
                     "Could not post caption.";
 
-                setError(errorMessage);
+                setError(
+                    errorMessage
+                );
 
                 /*
-                 * The post-caption API returns:
-                 *
-                 * "Please choose a username in your
-                 * profile before posting."
-                 *
-                 * If we receive that message, give the
-                 * user an obvious route to fix it.
+                 * If the API says the user needs
+                 * a username, show a direct link
+                 * to Profile.
                  */
                 if (
                     errorMessage
@@ -271,15 +275,17 @@ export default function CreateCaptionForm() {
                             "choose a username"
                         )
                 ) {
-                    setNeedsUsername(true);
+                    setNeedsUsername(
+                        true
+                    );
                 }
 
                 return;
             }
 
             /*
-             * Posting worked.
-             * Send the user back to the feed.
+             * Successfully posted.
+             * Return to the main feed.
              */
             router.push("/");
             router.refresh();
@@ -295,130 +301,126 @@ export default function CreateCaptionForm() {
     }
 
     return (
-        <main
-            style={{
-                minHeight: "100vh",
-                padding: "50px 20px",
-                background:
-                    "var(--background)",
-                color: "var(--text)",
-            }}
-        >
-            <div
-                style={{
-                    maxWidth: "680px",
-                    margin: "0 auto",
-                }}
-            >
-                <Link href="/">
-                    ← Back to feed
+        <main className="product-page">
+            <div className="product-container">
+
+                {/* Shared product branding */}
+
+                <Link
+                    href="/"
+                    className="product-brand"
+                >
+                    <span className="product-brand-kicker">
+                        Columbia × NYC
+                    </span>
+
+                    <span className="product-brand-name">
+                        Morningside Caption Club
+                    </span>
                 </Link>
 
-                <h1>
+                <h1 className="product-heading">
                     Create a Caption
                 </h1>
 
-                <p
-                    style={{
-                        color:
-                            "var(--text-secondary)",
-                    }}
-                >
-                    Generate it first. Post it
-                    only if you like it.
+                <p className="product-subtitle">
+                    Turn a campus or NYC moment
+                    into an AI caption. Generate
+                    it first, then post it only
+                    if you like it.
                 </p>
+
+                {/* Caption creation form */}
 
                 <form
                     onSubmit={
                         generateCaption
                     }
-                    style={{
-                        marginTop: "28px",
-                        display: "grid",
-                        gap: "24px",
-                        padding: "28px",
-                        border:
-                            "1px solid var(--border)",
-                        borderRadius: "16px",
-                        background:
-                            "var(--surface)",
-                    }}
+                    className="product-panel product-form"
                 >
-                    <label>
-                        <strong>
+                    <div className="product-field">
+                        <label
+                            htmlFor="caption-image"
+                            className="product-label"
+                        >
                             Upload a photo
-                        </strong>
+                        </label>
 
                         <input
+                            id="caption-image"
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
-                            onChange={(event) =>
+                            onChange={(
+                                event
+                            ) =>
                                 selectImage(
-                                    event.target.files?.[0] ??
+                                    event
+                                        .target
+                                        .files?.[0] ??
                                     null
                                 )
                             }
-                            style={{
-                                display: "block",
-                                marginTop: "10px",
-                            }}
+                            className="product-input"
                         />
-                    </label>
 
-                    <label>
-                        <strong>
-                            What should the caption
-                            be about?
-                        </strong>
+                        <p className="product-helper">
+                            JPEG, PNG, or WebP.
+                            The image will be
+                            displayed at its
+                            original proportions.
+                        </p>
+                    </div>
+
+                    <div className="product-field">
+                        <label
+                            htmlFor="caption-prompt"
+                            className="product-label"
+                        >
+                            What should the
+                            caption be about?
+                        </label>
 
                         <textarea
+                            id="caption-prompt"
                             value={prompt}
-                            onChange={(event) => {
+                            onChange={(
+                                event
+                            ) => {
                                 setPrompt(
-                                    event.target.value
+                                    event
+                                        .target
+                                        .value
                                 );
 
-                                setDraft(null);
+                                setDraft(
+                                    null
+                                );
+
                                 setError("");
-                                setNeedsUsername(false);
+                                setNeedsUsername(
+                                    false
+                                );
                             }}
                             rows={4}
                             placeholder="Example: Make fun of how long we waited for the 1 train..."
-                            style={{
-                                display: "block",
-                                width: "100%",
-                                marginTop: "10px",
-                                padding: "12px",
-                                border:
-                                    "1px solid var(--border)",
-                                borderRadius: "8px",
-                                background:
-                                    "var(--surface)",
-                                color:
-                                    "var(--text)",
-                                fontSize: "16px",
-                                resize: "vertical",
-                            }}
+                            className="product-input"
                         />
-                    </label>
+                    </div>
 
-                    <div>
-                        <strong>
+                    <div className="product-field">
+                        <span className="product-label">
                             Choose a vibe
-                        </strong>
+                        </span>
 
-                        <div
-                            style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: "10px",
-                                marginTop: "12px",
-                            }}
-                        >
+                        <div className="vibe-options">
                             {vibes.map(
-                                (option) => (
+                                (
+                                    option
+                                ) => (
                                     <button
-                                        key={option}
+                                        key={
+                                            option
+                                        }
                                         type="button"
                                         onClick={() => {
                                             setVibe(
@@ -429,38 +431,35 @@ export default function CreateCaptionForm() {
                                                 null
                                             );
 
-                                            setError("");
-                                            setNeedsUsername(false);
+                                            setError(
+                                                ""
+                                            );
+
+                                            setNeedsUsername(
+                                                false
+                                            );
                                         }}
-                                        style={{
-                                            padding:
-                                                "9px 14px",
-                                            borderRadius:
-                                                "999px",
-                                            border:
-                                                vibe ===
-                                                option
-                                                    ? "2px solid var(--text)"
-                                                    : "1px solid var(--border)",
-                                            background:
-                                                vibe ===
-                                                option
-                                                    ? "var(--text)"
-                                                    : "var(--surface)",
-                                            color:
-                                                vibe ===
-                                                option
-                                                    ? "var(--background)"
-                                                    : "var(--text)",
-                                            cursor:
-                                                "pointer",
-                                        }}
+                                        className={
+                                            vibe ===
+                                            option
+                                                ? "vibe-button vibe-button-active"
+                                                : "vibe-button"
+                                        }
                                     >
-                                        {option}
+                                        {
+                                            option
+                                        }
                                     </button>
                                 )
                             )}
                         </div>
+
+                        <p className="product-helper">
+                            Selected vibe:{" "}
+                            <strong>
+                                {vibe}
+                            </strong>
+                        </p>
                     </div>
 
                     <button
@@ -479,22 +478,13 @@ export default function CreateCaptionForm() {
                     </button>
                 </form>
 
+                {/* Error / username recovery */}
+
                 {error && (
-                    <div
-                        style={{
-                            marginTop: "20px",
-                            padding: "14px",
-                            borderRadius: "10px",
-                            border:
-                                "1px solid #e5b7bd",
-                            background:
-                                "var(--surface)",
-                        }}
-                    >
+                    <div className="product-error">
                         <p
                             style={{
                                 margin: 0,
-                                color: "#b00020",
                             }}
                         >
                             {error}
@@ -505,7 +495,8 @@ export default function CreateCaptionForm() {
                                 href="/profile"
                                 className="secondary-button"
                                 style={{
-                                    marginTop: "12px",
+                                    marginTop:
+                                        "12px",
                                 }}
                             >
                                 Choose a Username →
@@ -514,115 +505,85 @@ export default function CreateCaptionForm() {
                     </div>
                 )}
 
+                {/* Generated draft preview */}
+
                 {draft && (
-                    <section
-                        style={{
-                            marginTop: "32px",
-                            overflow: "hidden",
-                            border:
-                                "1px solid var(--border)",
-                            borderRadius: "18px",
-                            background:
-                                "var(--surface)",
-                            boxShadow:
-                                "var(--shadow)",
-                        }}
-                    >
+                    <section className="caption-preview-card">
+
                         {imagePreview && (
-                            <div
-                                style={{
-                                    width: "100%",
-                                    height: "500px",
-                                    backgroundColor: "#000",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    overflow: "hidden",
-                                }}
-                            >
+                            <div className="caption-preview-image-frame">
                                 <img
-                                    src={imagePreview}
+                                    src={
+                                        imagePreview
+                                    }
                                     alt="Caption preview"
-                                    style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "contain",
-                                        display: "block",
-                                    }}
+                                    className="caption-preview-image"
                                 />
                             </div>
                         )}
 
-                        <div
-                            style={{
-                                padding: "24px",
-                            }}
-                        >
-                            <p
-                                style={{
-                                    marginTop: 0,
-                                    color:
-                                        "var(--text-secondary)",
-                                    fontSize:
-                                        "13px",
-                                    fontWeight:
-                                        700,
-                                    textTransform:
-                                        "uppercase",
-                                    letterSpacing:
-                                        "1px",
-                                }}
-                            >
+                        <div className="caption-preview-content">
+                            <p className="preview-label">
                                 Preview — not posted yet
                             </p>
 
-                            <p
-                                style={{
-                                    fontSize: "24px",
-                                    fontWeight: 700,
-                                    lineHeight: 1.35,
-                                }}
-                            >
-                                “{draft.caption}”
-                            </p>
-
-                            <p
-                                style={{
-                                    color:
-                                        "var(--text-secondary)",
-                                }}
-                            >
-                                Vibe:{" "}
-                                {draft.vibe}
-                            </p>
-
-                            <button
-                                type="button"
-                                onClick={
-                                    postCaption
+                            <p className="preview-caption">
+                                “
+                                {
+                                    draft.caption
                                 }
-                                disabled={posting}
-                                className="primary-button"
-                            >
-                                {posting
-                                    ? "Posting..."
-                                    : "Post to Feed"}
-                            </button>
+                                ”
+                            </p>
 
-                            <p
-                                style={{
-                                    marginBottom: 0,
-                                    marginTop:
-                                        "12px",
-                                    color:
-                                        "var(--text-secondary)",
-                                    fontSize:
-                                        "13px",
-                                }}
-                            >
-                                Not feeling it? Change
-                                the prompt or vibe and
-                                generate another one.
+                            <p className="product-helper">
+                                Vibe:{" "}
+                                <strong>
+                                    {
+                                        draft.vibe
+                                    }
+                                </strong>
+                            </p>
+
+                            <div className="product-actions">
+                                <button
+                                    type="button"
+                                    onClick={
+                                        postCaption
+                                    }
+                                    disabled={
+                                        posting
+                                    }
+                                    className="primary-button"
+                                >
+                                    {posting
+                                        ? "Posting..."
+                                        : "Post to Feed"}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setDraft(
+                                            null
+                                        );
+                                        setError(
+                                            ""
+                                        );
+                                    }}
+                                    disabled={
+                                        posting
+                                    }
+                                    className="secondary-button"
+                                >
+                                    Try Another
+                                </button>
+                            </div>
+
+                            <p className="product-helper">
+                                Not feeling it?
+                                Change the prompt or
+                                vibe and generate
+                                another caption.
                             </p>
                         </div>
                     </section>
@@ -631,3 +592,4 @@ export default function CreateCaptionForm() {
         </main>
     );
 }
+
